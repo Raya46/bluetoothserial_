@@ -208,13 +208,13 @@ class ConnectView extends StatefulWidget {
                   child: Row(children: [
                     ElevatedButton(
                       onPressed: () async {
-                        await controller.sendLucuMessageToBluetooth("on");
+                        await controller.sendOnMessageToBluetooth("on");
                       },
                       child: const Text("ON"),
                     ),
                     ElevatedButton(
                       onPressed: () async {
-                        await controller.sendLucuOffMessageToBluetooth("off");
+                        await controller.sendOffMessageToBluetooth("off");
                       },
                       child: const Text("OFF"),
                     ),
@@ -225,9 +225,9 @@ class ConnectView extends StatefulWidget {
                             controller.abdul = value;
                           });
                           if (controller.abdul == true) {
-                            controller.sendLucuMessageToBluetooth('on');
+                            controller.sendOnMessageToBluetooth('on');
                           } else if (controller.abdul == false) {
-                            controller.sendLucuOffMessageToBluetooth('off');
+                            controller.sendOffMessageToBluetooth('off');
                           }
                         })
                   ]),

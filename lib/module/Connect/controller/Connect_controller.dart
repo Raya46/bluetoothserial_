@@ -200,30 +200,6 @@ class ConnectController extends State<ConnectView> implements MvcController {
     }
   }
 
-  // Method to send message,
-  // for turning the Bluetooth device on
-  void sendOnMessageToBluetooth() async {
-    Uint8List data = utf8.encode("1" "\r\n") as Uint8List;
-    connection?.output.add(data);
-    await connection?.output.allSent;
-    show('Device Turned On');
-    setState(() {
-      deviceState = 1; // device on
-    });
-  }
-
-  // Method to send message,
-  // for turning the Bluetooth device off
-  void sendOffMessageToBluetooth() async {
-    Uint8List data = utf8.encode("0" "\r\n") as Uint8List;
-    connection?.output.add(data);
-    await connection?.output.allSent;
-    show('Device Turned Off');
-    setState(() {
-      deviceState = -1; // device off
-    });
-  }
-
   Future show(
     String message, {
     Duration duration = const Duration(seconds: 3),
@@ -231,7 +207,7 @@ class ConnectController extends State<ConnectView> implements MvcController {
     await Future.delayed(const Duration(milliseconds: 100));
   }
 
-  sendLucuMessageToBluetooth(String message) async {    
+  sendOnMessageToBluetooth(String message) async {    
     Uint8List data = utf8.encode(message) as Uint8List;
     connection?.output.add(data);
     await connection?.output.allSent;
@@ -242,7 +218,7 @@ class ConnectController extends State<ConnectView> implements MvcController {
       });
     }
   }
-  sendLucuOffMessageToBluetooth(String message) async {    
+  sendOffMessageToBluetooth(String message) async {    
     Uint8List data = utf8.encode(message) as Uint8List;
     connection?.output.add(data);
     await connection?.output.allSent;
