@@ -1,3 +1,8 @@
+import 'dart:convert';
+
+import 'package:badges/badges.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
@@ -19,7 +24,7 @@ class ConnectView extends StatefulWidget {
     return LayoutBuilder(builder: (context, constraints) {
       final height = constraints.maxHeight;
       final width = constraints.maxWidth;
-      if (controller.connected == true ) {
+      if (controller.connected == false) {
         return Scaffold(
           backgroundColor: controller.bgColor,
           appBar: AppBar(
@@ -240,15 +245,22 @@ class ConnectView extends StatefulWidget {
             ),
             actions: <Widget>[
               IconButton(
+                color: controller.power
+                    ? controller.powerOn
+                    : controller.disableBaseColor,
                 icon: Icon(Icons.power_settings_new),
                 iconSize: (width * 0.1),
-                tooltip: "Save Todo and Retrun to List",
-                onPressed: controller.isButtonUnavailable
-                    ? null
-                    : controller.connected
-                        ? controller.disconnect
-                        : controller.connect,
-              )
+                tooltip: "On/Off",
+                onPressed: controller.powerOffOn,
+              ),
+              IconButton(
+                  icon: Icon(Icons.lightbulb),
+                  color: controller.lamp
+                      ? controller.lampOn
+                      : controller.fieldBgColor,
+                  iconSize: (width * 0.1),
+                  tooltip: "Save Todo and Retrun to List",
+                  onPressed: controller.lampOffOn),
             ],
           ),
           body: Container(
@@ -350,85 +362,226 @@ class ConnectView extends StatefulWidget {
                     ),
                   ),
                   Expanded(
-                    flex: 1,
-                    child: Container(),
-                  ),
-                  Expanded(
                       flex: 8,
-                      child: Column(children: [
-                        Container(
-                          margin: EdgeInsets.only(bottom: width * 0.05),
-                          child: Text(
-                            "Play Music",
-                            textAlign: TextAlign.start,
-                            style: GoogleFonts.inter(
-                                textStyle: TextStyle(
-                                    color: controller.baseColor,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                        Column(
-                          children: <Widget>[
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Text(
+                              "Play Music",
+                              textAlign: TextAlign.start,
+                              style: GoogleFonts.inter(
+                                  textStyle: TextStyle(
+                                      color: controller.baseColor,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold)),
+                            ),
                             ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(12.0),
+                              ),
                               child: Container(
-                                width: width / 1.3,
-                                height: width / 7,
+                                padding: EdgeInsets.all((width * 0.04)),
+                                height: width / 2.5,
+                                width: width / 1.2,
                                 color: controller.baseColor12,
-                                child: Container(
-                                  margin: EdgeInsets.symmetric(horizontal: 20),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text("song 1"),
-                                      Row(
-                                        children: [
-                                          IconButton(
-                                            icon:
-                                                Icon(Icons.play_arrow_rounded),
-                                            onPressed: () {},
-                                          )
-                                        ],
-                                      )
-                                    ],
-                                  ),
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      margin: EdgeInsets.symmetric(
+                                          horizontal: (0.05)),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 5),
+                                      decoration: BoxDecoration(
+                                          color: controller.baseColor,
+                                          borderRadius:
+                                              BorderRadius.circular(14)),
+                                      child: DropdownButton(
+                                        underline: Container(
+                                          height: 0,
+                                        ),
+                                        hint: Text(
+                                          "Select Music",
+                                          style: TextStyle(
+                                              color: controller.bgColor),
+                                        ),
+                                        isExpanded: true,
+                                        style: GoogleFonts.inter(
+                                            textStyle: TextStyle(
+                                                color: controller.bgColor,
+                                                fontSize: 16)),
+                                        items: controller.getListMusic(),
+                                        onChanged: (value) =>
+                                            controller.setState(() {
+                                          controller.message = value;
+                                        }),
+                                        value: controller.messages.isNotEmpty
+                                            ? controller.message
+                                            : null,
+                                        icon:
+                                            Icon(Icons.arrow_drop_down_rounded),
+                                        iconEnabledColor: controller.bgColor,
+                                        iconSize: 42,
+                                        dropdownColor: controller.baseColor,
+                                      ),
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          height: (height * 0.06),
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  controller.baseColor,
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          15)),
+                                            ),
+                                            onPressed: controller.retryMusic,
+                                            child: Icon(
+                                              Icons.repeat_one_rounded,
+                                              color: controller.retry
+                                                  ? controller.powerOn
+                                                  : controller.bgColor,
+                                              size: (width * 0.08),
+                                            ),
+                                          ),
+                                        ),
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            IconButton(
+                                                color: controller.baseColor,
+                                                iconSize: width * 0.1,
+                                                onPressed:
+                                                    controller.sendPrevious,
+                                                icon: Icon(Icons
+                                                    .skip_previous_rounded)),
+                                            IconButton(
+                                                color: controller.baseColor,
+                                                iconSize: width * 0.1,
+                                                onPressed:
+                                                    controller.playPaused,
+                                                icon: Icon(controller.play
+                                                    ? Icons.pause_rounded
+                                                    : Icons
+                                                        .play_arrow_rounded)),
+                                            IconButton(
+                                                color: controller.baseColor,
+                                                iconSize: width * 0.1,
+                                                onPressed: controller.sendNext,
+                                                icon: Icon(
+                                                    Icons.skip_next_rounded))
+                                          ],
+                                        ),
+                                        Container(
+                                          height: (height * 0.06),
+                                          width: (height * 0.07),
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  controller.baseColor,
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          15)),
+                                            ),
+                                            onPressed: controller.sendConvert,
+                                            child: Icon(
+                                              Icons.send_rounded,
+                                              color: controller.bgColor,
+                                              size: (width * 0.06),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
                             )
-                          ],
-                        )
-                      ])),
+                          ])),
                   Expanded(
                     flex: 3,
                     child: Center(
-                      child: Container(
-                        width: (width / 1.3),
-                        height: (height * 0.065),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: controller.baseColor,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Container(
+                            height: (height * 0.065),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: controller.baseColor,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15)),
+                              ),
+                              onPressed: controller.showAlertDelete,
+                              child: Icon(
+                                Icons.delete,
+                                color: controller.redColor,
+                                size: (width * 0.08),
+                              ),
+                            ),
                           ),
-                          onPressed: controller.showAlert,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.upload, color: controller.bgColor),
-                              Text(
-                                "Upload New Song",
-                                style: GoogleFonts.inter(
-                                    textStyle: TextStyle(
-                                        color: controller.bgColor,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold)),
-                              )
-                            ],
+                          Container(
+                            height: (height * 0.065),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: controller.baseColor,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15)),
+                              ),
+                              onPressed: controller.showAlert,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.upload, color: controller.bgColor),
+                                  Text(
+                                    "Upload New Song",
+                                    style: GoogleFonts.inter(
+                                        textStyle: TextStyle(
+                                            color: controller.bgColor,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold)),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                          Badge(
+                            animationType: BadgeAnimationType.fade,
+                            showBadge: controller.notif,
+                            padding: const EdgeInsets.all(10.0),
+                            badgeContent: Text('${controller.messages.length}',
+                                style: TextStyle(color: Colors.white)),
+                            badgeColor: Colors.red,
+                            toAnimate: true,
+                            child: Container(
+                              height: (height * 0.065),
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: controller.baseColor,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15)),
+                                ),
+                                onPressed: controller.showAlertMail,
+                                child: Icon(
+                                  Icons.mail_rounded,
+                                  color: controller.bgColor,
+                                  size: (width * 0.08),
+                                ),
+                              ),
+                            ),
+                          )
+                        ],
                       ),
                     ),
                   )
@@ -453,7 +606,7 @@ class ConnectView extends StatefulWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Noise",
+                  Text("Music Streaming",
                       style: GoogleFonts.inter(
                           textStyle: TextStyle(
                               fontSize: 18,
@@ -464,11 +617,20 @@ class ConnectView extends StatefulWidget {
                     child: Switch(
                       inactiveThumbColor: controller.bgColor,
                       value: controller.switchEnable,
-                      onChanged: (bool value) {
+                      onChanged: (value) {
                         controller.setState(() {
-                          controller.sliderEnable = value;
+                          controller.switchDialog = value;
                           controller.switchEnable = value;
+                          controller.sliderEnable = value;
+                          controller.switchEnablePlay = false;
+                          controller.sliderEnablePlay = false;
                         });
+                        controller.openLoading(context);
+                        if (controller.switchEnable == true) {
+                          controller.sendMessageToBluetooth('o\n');
+                        } else if (controller.switchEnable == false) {
+                          controller.sendOffMessageToBluetooth("8\n");
+                        }
                       },
                       activeColor: controller.baseColor,
                       inactiveTrackColor: Color.fromRGBO(78, 78, 78, 1),
@@ -502,7 +664,7 @@ class ConnectView extends StatefulWidget {
                       value: controller.currentValue,
                       min: 0,
                       max: 1.0,
-                      divisions: 10,
+                      divisions: 100,
                       activeColor: controller.baseColor,
                       inactiveColor: controller.bgColor,
                       onChanged: controller.sliderEnable == true
@@ -540,11 +702,20 @@ class ConnectView extends StatefulWidget {
                     child: Switch(
                       inactiveThumbColor: controller.bgColor,
                       value: controller.switchEnablePlay,
-                      onChanged: (bool value) {
+                      onChanged: (value) {
                         controller.setState(() {
-                          controller.sliderEnablePlay = value;
+                          controller.switchDialog = value;
                           controller.switchEnablePlay = value;
+                          controller.sliderEnablePlay = value;
+                          controller.switchEnable = false;
+                          controller.sliderEnable = false;
                         });
+                        controller.openLoading(context);
+                        if (controller.switchEnablePlay == true) {
+                          controller.sendMessageToBluetooth("l\n");
+                        } else if (controller.switchEnablePlay == false) {
+                          controller.sendOffMessageToBluetooth('5\n');
+                        }
                       },
                       activeColor: controller.baseColor,
                       inactiveTrackColor: Color.fromRGBO(78, 78, 78, 1),
@@ -569,20 +740,20 @@ class ConnectView extends StatefulWidget {
                       thumbShape:
                           RoundSliderThumbShape(enabledThumbRadius: 10.0),
                       trackHeight: 4,
-                      overlayShape:
-                          RoundSliderOverlayShape(overlayRadius: 20.0),
                       disabledActiveTrackColor: controller.bgColor,
                       disabledThumbColor: controller.bgColor,
+                      overlayShape:
+                          RoundSliderOverlayShape(overlayRadius: 20.0),
                     ),
                     child: Slider(
-                      value: controller.discreet,
+                      value: controller.playMusic,
                       min: 0,
                       max: 1.0,
-                      divisions: 10,
+                      divisions: 100,
                       activeColor: controller.baseColor,
                       inactiveColor: controller.bgColor,
-                      onChanged: controller.sliderEnablePlay                  == true
-                          ? controller.sliderControlDis
+                      onChanged: controller.sliderEnablePlay == true
+                          ? controller.sliderControlPlay
                           : null,
                     ),
                   ),

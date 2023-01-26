@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.isoja_application">
    <application
-        android:label="isoja_application"
+        android:label="Isoja"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

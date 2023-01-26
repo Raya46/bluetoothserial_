@@ -8,12 +8,22 @@ import 'package:isoja_application/state_util.dart';
 import 'package:perfect_volume_control/perfect_volume_control.dart';
 import '../view/Connect_view.dart';
 
+class _Message {
+  int whom;
+  String text;
+
+  _Message(this.whom, this.text);
+}
+
 class ConnectController extends State<ConnectView> implements MvcController {
   static late ConnectController instance;
   late ConnectView view;
+  bool switch1 = false;
+  bool btnVisible = true;
+  final ScrollController listScrollController = new ScrollController();
+  static final clientID = 0;
   double currentValue = 0.0;
-  double discreet = 0.0;
-  double stream = 0.0;
+  double playMusic = 0.0;
 
   @override
   void initState() {
@@ -66,6 +76,8 @@ class ConnectController extends State<ConnectView> implements MvcController {
   final FlutterBluetoothSerial bluetooth = FlutterBluetoothSerial.instance;
   BluetoothConnection? connection;
   late int deviceState;
+  _Message? message;
+  List<_Message> messages = [];
   int indexNum = 0;
   bool isDisconnecting = false;
   bool abdul = false;
@@ -79,6 +91,9 @@ class ConnectController extends State<ConnectView> implements MvcController {
   final Color disableBaseColor = Color.fromRGBO(216, 226, 220, 1);
   final Color disableBaseColor12 = Color.fromRGBO(0, 0, 0, 0.56);
   final Color fieldBgColor = Color.fromRGBO(221, 225, 234, 1);
+  final Color lampOn = Color.fromRGBO(249, 203, 64, 1);
+  final Color powerOn = Color.fromRGBO(36, 169, 108, 1);
+  final Color redColor = Color.fromRGBO(214, 71, 51, 1);
 
   Future<void> enableBluetooth() async {
     // Retrieving the current Bluetooth state
@@ -103,15 +118,151 @@ class ConnectController extends State<ConnectView> implements MvcController {
   // Define some variabes, which will be required later
   List<BluetoothDevice> devicesList = [];
   BluetoothDevice? device;
+  String _messageBuffer = '';
   bool connected = false;
   bool isVisible = true;
   bool isVisibleHome = false;
   bool isButtonUnavailable = false;
+  //*slider & switch
   int sliderValue = 0;
-  bool sliderEnable = true;
-  bool sliderEnablePlay = true;
-  bool switchEnable = true;
-  bool switchEnablePlay = true;
+  bool sliderEnable = false;
+  bool sliderEnablePlay = false;
+  bool switchEnable = false;
+  bool switchEnablePlay = false;
+
+  //! power
+  bool power = false;
+
+  powerOffOn() {
+    if (power == false) {
+      message9();
+    } else {
+      message0();
+    }
+  }
+
+  void message9() async {
+    sendMessageToBluetooth("9\n");
+    setState(() {
+      deviceState = 1;
+      power = true; // device on
+    });
+  }
+
+  void message0() async {
+    sendOffMessageToBluetooth("0\n");
+    setState(() {
+      deviceState = 1;
+      power = false; // device on
+    });
+  }
+
+  //!message lamp led
+  //*lamp
+  bool lamp = false;
+  lampOffOn() {
+    if (lamp == false) {
+      messageA();
+    } else {
+      messageB();
+    }
+  }
+
+  void messageA() async {
+    sendMessageToBluetooth("a\n");
+    setState(() {
+      deviceState = 1;
+      power = true; // device on
+    });
+  }
+
+  void messageB() async {
+    sendMessageToBluetooth("b\n");
+    setState(() {
+      deviceState = 1;
+      power = true; // device on
+    });
+  }
+
+  //! Play Paused
+  bool play = false;
+  playPaused() {
+    if (play == false) {
+      message3();
+    } else {
+      message4();
+    }
+  }
+
+  void message3() async {
+    sendOffMessageToBluetooth("3\n");
+    setState(() {
+      deviceState = 1;
+      play = true; // device on
+    });
+  }
+
+  void message4() async {
+    sendOffMessageToBluetooth("4\n");
+    setState(() {
+      deviceState = 1;
+      play = false; // device on
+    });
+  }
+
+  //!streaming
+  mySwitch() => (value) async {
+        setState(() {
+          deviceState = 1;
+          sliderEnable = value;
+          switchEnable = value;
+        });
+        sendMessageToBluetooth("2");
+      };
+
+  //!retry
+  bool retry = false;
+
+  retryMusic() {
+    if (retry == false) {
+      sendOffMessageToBluetooth("6\n");
+      setState(() {
+        retry = true;
+      });
+    } else {
+      sendOffMessageToBluetooth("7\n");
+      setState(() {
+        retry = false;
+      });
+    }
+  }
+
+  //?! delay
+  bool isSwitchEnable = false;
+  delay() {
+    Future.delayed(Duration(seconds: 5));
+  }
+
+  Future<void> sendOnnMessageToBluetooth(String message) async {
+    setState(() {
+      isSwitchEnable = true;
+    });
+    sendResetMessage('8');
+    await delay();
+    Uint8List data = utf8.encode(message) as Uint8List;
+    connection?.output.add(data);
+    await connection?.output.allSent;
+    setState(() {
+      isSwitchEnable = false;
+      switchEnablePlay = false;
+    });
+  }
+
+  sendResetMessage(String message) async {
+    Uint8List data = utf8.encode(message) as Uint8List;
+    connection?.output.add(data);
+    await connection?.output.allSent;
+  }
 
   Future<void> getPairedDevices() async {
     List<BluetoothDevice> devices = [];
@@ -131,6 +282,48 @@ class ConnectController extends State<ConnectView> implements MvcController {
     setState(() {
       devicesList = devices;
     });
+  }
+
+  //!previous && next
+  sendNext() {
+    sendOffMessageToBluetooth('n\n');
+  }
+
+  sendPrevious() {
+    sendOffMessageToBluetooth('p\n');
+  }
+
+  //!List dropdown anti malas
+  List<DropdownMenuItem<_Message>> getListMusic() {
+    List<DropdownMenuItem<_Message>> music = [];
+    if (messages.isEmpty) {
+      music.add(const DropdownMenuItem(
+        child: Text(
+          'Select music',
+          style: TextStyle(color: Colors.white),
+        ),
+      ));
+    } else {
+      var mpFiles = messages
+          .where((message) =>
+              message.text.trim().contains('.mp3') ||
+              message.text.trim().contains('.wav'))
+          .toList();
+      for (var message in mpFiles) {
+        music.add(DropdownMenuItem(
+          value: message,
+          child: Text(message.text.trim()),
+        ));
+      }
+    }
+    return music;
+  }
+
+  sendConvert() {
+    Uint8List json =
+        utf8.encode('/${message?.text.trim().trim()}\n') as Uint8List;
+    connection?.output.add(json);
+    connection?.output.allSent;
   }
 
   List<DropdownMenuItem<BluetoothDevice>> getDeviceItems() {
@@ -164,7 +357,6 @@ class ConnectController extends State<ConnectView> implements MvcController {
       // if (connection == null || (connection != null && !isConnected!)) {
       if (!isConnected!) {
         await BluetoothConnection.toAddress(device?.address).then((conn) {
-          debugPrint('Connected to the device');
           connection = conn;
           setState(() {
             connected = true;
@@ -172,11 +364,11 @@ class ConnectController extends State<ConnectView> implements MvcController {
             isVisibleHome = true;
           });
 
-          connection?.input?.listen(null).onDone(() {
+          connection?.input?.listen(onDataReceived).onDone(() {
             if (isDisconnecting) {
               debugPrint('Disconnecting locally!');
             } else {
-              debugPrint('Disconnected remotely!');
+              debugPrint('Diconnected remotely!');
             }
             if (mounted) {
               setState(() {});
@@ -192,6 +384,61 @@ class ConnectController extends State<ConnectView> implements MvcController {
     }
   }
 
+  List<DropdownMenuItem<_Message>> getLogInfo() {
+    List<DropdownMenuItem<_Message>> music = [];
+    if (messages.isEmpty) {
+      music.add(const DropdownMenuItem(
+        child: Text(
+          'status',
+          style: TextStyle(color: Colors.black),
+        ),
+      ));
+    } else {
+      for (var message in messages) {
+        music.add(DropdownMenuItem(
+          value: message,
+          child: Text("• ${message.text.trim()}"),
+        ));
+      }
+    }
+    return music;
+  }
+
+  //! Loading dialog kacau
+  bool switchDialog = false;
+
+  void openLoading(BuildContext context, [bool mounted = true]) async {
+    if (switchDialog) {
+      showDialog(
+          barrierDismissible: false,
+          context: context,
+          builder: (_) {
+            return Dialog(
+              // The background color
+              backgroundColor: bgColor,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    // The loading indicator
+                    CircularProgressIndicator(),
+                    SizedBox(
+                      height: 40,
+                    ),
+                    // Some text
+                    Text('Loading...')
+                  ],
+                ),
+              ),
+            );
+          });
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    }
+  }
+
   //!Malas
   sliderControl(newVol) {
     setState(() {
@@ -202,13 +449,13 @@ class ConnectController extends State<ConnectView> implements MvcController {
     debugPrint('$currentValue');
   }
 
-  sliderControlDis(newVol) {
+  sliderControlPlay(newVol) {
     setState(() {
-      discreet = newVol;
+      playMusic = newVol;
     });
-    PerfectVolumeControl.setVolume(discreet);
-    sendVolume('$discreet');
-    debugPrint('$discreet');
+    PerfectVolumeControl.setVolume(playMusic);
+    sendVolume('$playMusic');
+    debugPrint('$playMusic');
   }
   //!
 
@@ -239,20 +486,42 @@ class ConnectController extends State<ConnectView> implements MvcController {
 
   ///!json
 
-  final keyController = TextEditingController();
-  final valueController = TextEditingController();
-  String key = '';
-  String value = '';
   String jsonString = '';
+  String value = '';
+  String ssid = '';
+  String pass = '';
+  String link = '';
+  final valueController = TextEditingController();
+  final ssidController = TextEditingController();
+  final passController = TextEditingController();
+  final linkController = TextEditingController();
 
-  void sendJsonToEsp() {
-    key = keyController.text;
-    value = valueController.text;
-    convertInputToJson();
+
+  //? delete
+  void convertInputToJson() {
+    value = value.replaceAll(new RegExp(r'\s'), "");
+    jsonString = '{"DLT":"$value"}';
+  }
+
+  //?upload
+  void convertWifi() {
+    ssid = ssid.replaceAll(new RegExp(r'\s'), "");
+    pass = pass.replaceAll(new RegExp(r'\s'), "");
+    link = link.replaceAll(new RegExp(r'\s'), "");
+    jsonString = '{"S":"$ssid"},{"PW":"$pass"},{"f":"$link"}';
+  }
+
+  void sendJsonWifi() {
+    ssid = ssidController.text;
+    pass = passController.text;
+    link = linkController.text;
+    convertWifi();
     Navigator.pop(context);
     sendJsonString(jsonString);
-    keyController.clear();
-    valueController.clear();
+    ssidController.clear();
+    passController.clear();
+    linkController.clear();
+    setState(() {});
   }
 
   void sendJsonString(String jsonString) async {
@@ -261,14 +530,70 @@ class ConnectController extends State<ConnectView> implements MvcController {
     await connection?.output.allSent;
   }
 
-  void convertInputToJson() {
-    key = key.replaceAll(new RegExp(r'\s'), "");
-    value = value.replaceAll(new RegExp(r'\s'), "");
-    jsonString = '{"$key":"$value"}';
+  void sendJsonDelete() {
+    value = valueController.text;
+    convertInputToJson();
+    Navigator.pop(context);
+    sendJsonString(jsonString);
+    valueController.clear();
   }
 
-  Future showAlert() => showDialog(
-    barrierDismissible: false,
+  void onDataReceived(Uint8List data) {
+    // Allocate buffer for parsed data
+    int backspacesCounter = 0;
+    data.forEach((byte) {
+      if (byte == 8 || byte == 127) {
+        backspacesCounter++;
+      }
+    });
+    Uint8List buffer = Uint8List(data.length - backspacesCounter);
+    int bufferIndex = buffer.length;
+    setState(() {
+      notif = true;
+    });
+
+    // Apply backspace control character
+    backspacesCounter = 0;
+    for (int i = data.length - 1; i >= 0; i--) {
+      if (data[i] == 8 || data[i] == 127) {
+        backspacesCounter++;
+      } else {
+        if (backspacesCounter > 0) {
+          backspacesCounter--;
+        } else {
+          buffer[--bufferIndex] = data[i];
+        }
+      }
+    }
+
+    // Create message if there is new line character
+    String dataString = String.fromCharCodes(buffer);
+    int index = buffer.indexOf(13);
+    if (~index != 0) {
+      setState(() {
+        messages.add(
+          _Message(
+            1,
+            backspacesCounter > 0
+                ? _messageBuffer.substring(
+                    0, _messageBuffer.length - backspacesCounter)
+                : _messageBuffer + dataString.substring(0, index),
+          ),
+        );
+        _messageBuffer = dataString.substring(index);
+      });
+    } else {
+      _messageBuffer = (backspacesCounter > 0
+          ? _messageBuffer.substring(
+              0, _messageBuffer.length - backspacesCounter)
+          : _messageBuffer + dataString);
+    }
+  }
+
+  //! alert dialog
+
+        Future showAlert() => showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) => AlertDialog(
             shape:
@@ -276,7 +601,8 @@ class ConnectController extends State<ConnectView> implements MvcController {
             backgroundColor: bgColor,
             title: Text("Upload New Song"),
             content: Container(
-                height: MediaQuery.of(context).size.width / 2,
+                height: MediaQuery.of(context).size.width / 1.5,
+                width: MediaQuery.of(context).size.width / 1.5,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -287,14 +613,13 @@ class ConnectController extends State<ConnectView> implements MvcController {
                         isDense: true,
                         filled: true,
                         fillColor: baseColor12,
-                        border: OutlineInputBorder(
-                            borderSide:
-                                BorderSide(width: 10, color: baseColor)),
+                        enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: baseColor)),
                         labelText: 'SSID',
                         hintText: 'Insert..',
                         suffixIcon: Icon(Icons.wifi),
                       ),
-                      controller: keyController,
+                      controller: ssidController,
                       onChanged: (value) {
                         jsonString = value;
                       },
@@ -306,12 +631,90 @@ class ConnectController extends State<ConnectView> implements MvcController {
                         isDense: true,
                         filled: true,
                         fillColor: baseColor12,
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(width: 3, color: baseColor),
-                        ),
+                        enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: baseColor)),
                         labelText: 'Password',
                         hintText: 'Insert..',
                         suffixIcon: Icon(Icons.password_rounded),
+                      ),
+                      controller: passController,
+                      onChanged: (value) {
+                        jsonString = value;
+                      },
+                    ),
+                    TextFormField(
+                      style: GoogleFonts.inter(
+                          textStyle: TextStyle(color: textColor)),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        filled: true,
+                        fillColor: baseColor12,
+                        enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: baseColor)),
+                        labelText: 'Link',
+                        hintText: 'Insert..',
+                        suffixIcon: Icon(Icons.link),
+                      ),
+                      controller: linkController,
+                      onChanged: (value) {
+                        jsonString = value;
+                      },
+                    ),
+                  ],
+                )),
+            actions: <Widget>[
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: baseColor,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4)),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      Navigator.pop(context);
+                    });
+                    ssidController.clear();
+                    passController.clear();
+                    linkController.clear();
+                  },
+                  child: const Icon(Icons.clear)),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: baseColor,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4)),
+                  ),
+                  onPressed: sendJsonWifi,
+                  child: const Icon(Icons.subdirectory_arrow_left)),
+            ],
+          ));
+
+  Future showAlertDelete() => showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) => AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            backgroundColor: bgColor,
+            title: Text("Delete File Music"),
+            content: Container(
+                height: MediaQuery.of(context).size.width / 7,
+                width: MediaQuery.of(context).size.width / 1.5,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextFormField(
+                      style: GoogleFonts.inter(
+                          textStyle: TextStyle(color: textColor)),
+                      decoration: InputDecoration(
+                        enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: baseColor)),
+                        isDense: true,
+                        filled: true,
+                        fillColor: baseColor12,
+                        labelText: 'Delete',
+                        hintText: 'Insert file name..',
+                        suffixIcon: Icon(Icons.delete),
                       ),
                       controller: valueController,
                       onChanged: (value) {
@@ -332,17 +735,49 @@ class ConnectController extends State<ConnectView> implements MvcController {
                       Navigator.pop(context);
                     });
                     valueController.clear();
-                    keyController.clear();
                   },
                   child: const Icon(Icons.clear)),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(
+                  style: ElevatedButton.styleFrom(
                     backgroundColor: baseColor,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4)),
                   ),
-                  onPressed: sendJsonToEsp,
+                  onPressed: sendJsonDelete,
                   child: const Icon(Icons.subdirectory_arrow_left)),
+            ],
+          ));
+
+  bool notif = false;
+
+  Future showAlertMail() => showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) => AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            backgroundColor: bgColor,
+            title: Text("History Log"),
+            content: Container(
+                height: MediaQuery.of(context).size.width / 2,
+                width: MediaQuery.of(context).size.width / 1.2,
+                child: ListView(
+                  children: getLogInfo(),
+                )),
+            actions: <Widget>[
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: baseColor,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4)),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      Navigator.pop(context);
+                    });
+                    valueController.clear();
+                  },
+                  child: const Icon(Icons.clear)),
             ],
           ));
 
@@ -368,14 +803,18 @@ class ConnectController extends State<ConnectView> implements MvcController {
     await connection?.output.allSent;
   }
 
-  sendOnMessageToBluetooth(String message) async {
+  sendMessageToBluetooth(String message) async {
+    sendResetMessage('8\n');
+    await Future.delayed(Duration(seconds: 1));
     Uint8List data = utf8.encode(message) as Uint8List;
     connection?.output.add(data);
     await connection?.output.allSent;
     show('Device Turned On');
     if (mounted) {
       setState(() {
-        deviceState = 1; // device on
+        deviceState = 1;
+        switch1 = true;
+        btnVisible = true;
       });
     }
   }
@@ -384,17 +823,14 @@ class ConnectController extends State<ConnectView> implements MvcController {
     Uint8List data = utf8.encode(message) as Uint8List;
     connection?.output.add(data);
     await connection?.output.allSent;
-    show('Device Turned On');
-    if (mounted) {
-      setState(() {
-        deviceState = -1; // device on
-      });
-    }
+  }
+
+  sendListMessage(String message) async {
+    Uint8List data = utf8.encode(message) as Uint8List;
+    await Future.delayed(Duration(seconds: 4));
+    connection?.output.add(data);
+    await connection?.output.allSent;
   }
 }
-
-
-
-  // @override
-  // Widget build(BuildContext context) => widget.build(context, this);
-
+// @override
+// Widget build(BuildContext context) => widget.build(context, this);
