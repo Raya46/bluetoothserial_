@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "211421215478",
+    "project_id": "isoja-serial",
+    "storage_bucket": "isoja-serial.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:211421215478:android:bb631659b95740240a8ad7",
+        "android_client_info": {
+          "package_name": "com.example.isoja_application"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "211421215478-dpo56g768vvpvi94e9nq1rqie577rg82.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDef_BVHNJnME5P5wAsoWWH6Q22ZECYnoQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "211421215478-dpo56g768vvpvi94e9nq1rqie577rg82.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
