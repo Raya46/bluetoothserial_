@@ -14,8 +14,7 @@ import 'package:isoja_application/module/Connect/widget/widgetSetting.dart';
 class _Message {
   int whom;
   String text;
-
-  _Message(this.whom, this.text);
+  _Message(this.whom, this.text, );
 }
 
 class ControlPage extends StatefulWidget {
@@ -65,11 +64,13 @@ class _ControlPageState extends State<ControlPage> {
           : _messageBuffer + dataString.substring(0, index));
       if (message.endsWith('.mp3') ||
           message.endsWith('.wav') ||
-          message.endsWith('.aac')) {
+          message.endsWith('.aac') || 
+          message.endsWith('.mpeg')) {
         setState(() {
-          messages.add(
-            _Message(1,message.trim()),
-          );
+          messages.add( _Message(1,message.trim()),);
+          if(messages.length > 3){
+            messages.removeAt(0);
+          }
         });
       }
       _messageBuffer = dataString.substring(index);
@@ -101,7 +102,7 @@ class _ControlPageState extends State<ControlPage> {
   _Message? message;
   List<_Message> messages = [];
   List messags = [];
-  List receiving = [];
+  List<Widget> carouselData = [];
   late int deviceState;
   TextEditingController valueController = TextEditingController();
   final CarouselController carouselController = CarouselController();
@@ -388,7 +389,8 @@ class _ControlPageState extends State<ControlPage> {
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 0.0),
-                                            child: CarouselSlider.builder(
+                                            child: 
+                                            CarouselSlider.builder(
                                               itemCount: messages.length,
                                               carouselController:
                                                   carouselController,
@@ -398,24 +400,32 @@ class _ControlPageState extends State<ControlPage> {
                                                   padding: const EdgeInsets
                                                           .symmetric(
                                                       horizontal: 0.0),
-                                                  child: Row(
-                                                    children: [
+                                                  child: 
                                                       Column(
                                                         mainAxisAlignment:
-                                                            MainAxisAlignment.center,
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
                                                         children: [
-                                                          Text(
-                                                            messages[index].text.trim(),
-                                                            style:
-                                                                GoogleFonts.inter(
-                                                                    fontSize: 16,
-                                                                    fontWeight:FontWeight.bold,
-                                                                    color: disable),
-                                                                    maxLines: 1,
-                                                                    overflow: TextOverflow.ellipsis,
-                                                                    textAlign: TextAlign.center,
-
+                                                          Card(
+                                                            color: Colors.black,
+                                                            child: Text(
+                                                              messages[index]
+                                                                  .text
+                                                                  .trim(),
+                                                              style: GoogleFonts.inter(
+                                                                  fontSize: 16,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: disable),
+                                                              maxLines: 1,
+                                                              overflow:TextOverflow.ellipsis,
+                                                              textAlign: TextAlign
+                                                                  .center,
+                                                            ),
                                                           ),
                                                         ],
                                                       ),
@@ -425,12 +435,12 @@ class _ControlPageState extends State<ControlPage> {
                                                       //   size: width * 0.1,
                                                       //   color: disable,
                                                       // )
-                                                    ],
-                                                  ),
+
 
                                                 );
                                               },
                                               options: CarouselOptions(
+                                                viewportFraction: 1,
                                                   height: 400.0,
                                                   enableInfiniteScroll: false,
                                                   enlargeCenterPage: true,
@@ -440,7 +450,9 @@ class _ControlPageState extends State<ControlPage> {
                                                       (index, reason) {
                                                     setState(() {
                                                       selectedValue =
-                                                          messages[index].text.trim();
+                                                          messages[index]
+                                                              .text
+                                                              .trim();
                                                     });
                                                   }),
                                             ),
@@ -479,7 +491,8 @@ class _ControlPageState extends State<ControlPage> {
                                           size: width * 0.18,
                                           color: base),
                                       onTap: () {
-                                        BluetoothManager.sendData('/${selectedValue}\n');
+                                        BluetoothManager.sendData(
+                                            '/${selectedValue}\n');
                                       },
                                     ),
                                     InkWell(
@@ -595,8 +608,7 @@ class _ControlPageState extends State<ControlPage> {
                           });
                           openLoading(context);
                           if (music == true) {
-                            sendMessageToBluetooth('1\n').then((_) {
-                            });
+                            sendMessageToBluetooth('1\n').then((_) {});
                           } else if (music == false) {
                             BluetoothManager.sendData('5\n');
                           }

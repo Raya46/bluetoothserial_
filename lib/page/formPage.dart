@@ -79,7 +79,7 @@ class _FormPageState extends State<FormPage> {
     BluetoothManager.sendData(jsonString);
     // await Future.delayed(Duration(seconds: 3));
     // targetChar.write(utf8.encode(jsonString));
-    BluetoothManager.sendData(jsonString);
+    // BluetoothManager.sendData(jsonString);
     ssidController.clear();
     passController.clear();
     linkController.clear();
