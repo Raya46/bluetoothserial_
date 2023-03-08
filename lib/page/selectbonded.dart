@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:isoja_application/core.dart';
+import 'package:isoja_application/helper/BluetoothManager.dart';
 import 'package:isoja_application/page/ControlPage.dart';
 import 'package:isoja_application/module/Connect/widget/bluetoothdevicelist.dart';
-
 
 class SelectBondedDevicePage extends StatefulWidget {
   /// If true, on page start there is performed discovery upon the bonded devices.
@@ -39,7 +39,7 @@ class _SelectBondedDevicePage extends State<SelectBondedDevicePage> {
   // Availability
   StreamSubscription<BluetoothDiscoveryResult>? _discoveryStreamSubscription;
   bool _isDiscovering = false;
-
+  bool isConnecting = true;
   _SelectBondedDevicePage();
 
   @override
@@ -116,15 +116,26 @@ class _SelectBondedDevicePage extends State<SelectBondedDevicePage> {
               device: _device.device,
               rssi: _device.rssi,
               enabled: _device.availability == _DeviceAvailability.yes,
-              onTap: () {
-                Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ControlPage(deviceName: _device.device,)),
-                );
+              onTap: () async {
+                try {
+                  await BluetoothManager.connect(_device.device);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ControlPage(
+                              deviceName: _device.device,
+                            )),
+                  );
+                } catch (e) {
+                  setState(() {
+                    isConnecting = false;
+                  });
+                }
               },
-              onLongPress: ()async{
-                if(_device.device.isBonded){
-                  await FlutterBluetoothSerial.instance.removeDeviceBondWithAddress(_device.device.address);
+              onLongPress: () async {
+                if (_device.device.isBonded) {
+                  await FlutterBluetoothSerial.instance
+                      .removeDeviceBondWithAddress(_device.device.address);
                   Navigator.pop(context);
                 }
               },

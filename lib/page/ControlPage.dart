@@ -14,7 +14,10 @@ import 'package:isoja_application/module/Connect/widget/widgetSetting.dart';
 class _Message {
   int whom;
   String text;
-  _Message(this.whom, this.text, );
+  _Message(
+    this.whom,
+    this.text,
+  );
 }
 
 class ControlPage extends StatefulWidget {
@@ -64,11 +67,13 @@ class _ControlPageState extends State<ControlPage> {
           : _messageBuffer + dataString.substring(0, index));
       if (message.endsWith('.mp3') ||
           message.endsWith('.wav') ||
-          message.endsWith('.aac') || 
+          message.endsWith('.aac') ||
           message.endsWith('.mpeg')) {
         setState(() {
-          messages.add( _Message(1,message.trim()),);
-          if(messages.length > 3){
+          messages.add(
+            _Message(1, message.trim()),
+          );
+          if (messages.length > 3) {
             messages.removeAt(0);
           }
         });
@@ -121,11 +126,7 @@ class _ControlPageState extends State<ControlPage> {
 
   void initState() {
     super.initState();
-    BluetoothManager.connect(widget.deviceName).then((_) {
-      setState(() {
-        isConnecting = false;
-        isDisconnecting = false;
-      });
+    try {
       BluetoothManager.connection!.input!.listen(onDataReceived).onDone(() {
         if (isDisconnecting) {
           print('Disconnecting locally!');
@@ -136,21 +137,9 @@ class _ControlPageState extends State<ControlPage> {
           setState(() {});
         }
       });
-    }).catchError((error) {
-      print('Cannot connect, exception occured');
-      print(error);
-    });
-  }
-
-  void receiveData() {
-    BluetoothManager.connection!.input!.listen((data) {
-      // parsing data
-      String message = utf8.decode(data);
-      // tambahkan data ke dalam list data
-      messags.add(message);
-      // perbarui tampilan
-      setState(() {});
-    });
+    } catch (e) {
+      Navigator.pop(context);
+    }
   }
 
   sendMessageToBluetooth(String message) async {
@@ -389,8 +378,7 @@ class _ControlPageState extends State<ControlPage> {
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 0.0),
-                                            child: 
-                                            CarouselSlider.builder(
+                                            child: CarouselSlider.builder(
                                               itemCount: messages.length,
                                               carouselController:
                                                   carouselController,
@@ -400,47 +388,41 @@ class _ControlPageState extends State<ControlPage> {
                                                   padding: const EdgeInsets
                                                           .symmetric(
                                                       horizontal: 0.0),
-                                                  child: 
-                                                      Column(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          Card(
-                                                            color: Colors.black,
-                                                            child: Text(
-                                                              messages[index]
-                                                                  .text
-                                                                  .trim(),
-                                                              style: GoogleFonts.inter(
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Card(
+                                                        color: Colors.black,
+                                                        child: Text(
+                                                          messages[index]
+                                                              .text
+                                                              .trim(),
+                                                          style:
+                                                              GoogleFonts.inter(
                                                                   fontSize: 16,
                                                                   fontWeight:
                                                                       FontWeight
                                                                           .bold,
-                                                                  color: disable),
-                                                              maxLines: 1,
-                                                              overflow:TextOverflow.ellipsis,
-                                                              textAlign: TextAlign
-                                                                  .center,
-                                                            ),
-                                                          ),
-                                                        ],
+                                                                  color:
+                                                                      disable),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                        ),
                                                       ),
-                                                      // Icon(
-                                                      //   Icons
-                                                      //       .play_arrow_rounded,
-                                                      //   size: width * 0.1,
-                                                      //   color: disable,
-                                                      // )
-
-
+                                                    ],
+                                                  ),
                                                 );
                                               },
                                               options: CarouselOptions(
-                                                viewportFraction: 1,
+                                                  viewportFraction: 1,
                                                   height: 400.0,
                                                   enableInfiniteScroll: false,
                                                   enlargeCenterPage: true,
@@ -476,6 +458,7 @@ class _ControlPageState extends State<ControlPage> {
                                       child: Icon(Icons.skip_previous,
                                           size: width * 0.15, color: base),
                                       onTap: () {
+                                        BluetoothManager.sendData('p \n');
                                         carouselController.previousPage(
                                             duration:
                                                 Duration(milliseconds: 300),
@@ -502,6 +485,7 @@ class _ControlPageState extends State<ControlPage> {
                                       child: Icon(Icons.skip_next,
                                           size: width * 0.15, color: base),
                                       onTap: () {
+                                        BluetoothManager.sendData('n \n');
                                         carouselController.nextPage(
                                             duration:
                                                 Duration(milliseconds: 300),
