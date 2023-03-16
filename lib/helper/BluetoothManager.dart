@@ -10,8 +10,8 @@ class BluetoothManager {
     try {
       connection = await BluetoothConnection.toAddress(device.address)
           .then((_connection) {
-        print(_connection);
         connection = _connection;
+        print('success');
         return connection;
       });
       return true;

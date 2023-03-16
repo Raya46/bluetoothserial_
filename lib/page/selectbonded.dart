@@ -41,6 +41,27 @@ class _SelectBondedDevicePage extends State<SelectBondedDevicePage> {
   bool isConnecting = true;
   _SelectBondedDevicePage();
 
+   void showLoadingModal(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Container(
+            height: 150,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('retry'),
+                SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -128,6 +149,7 @@ class _SelectBondedDevicePage extends State<SelectBondedDevicePage> {
                 } catch (e) {
                   setState(() {
                     isConnecting = false;
+                    showLoadingModal(context);
                   });
                 }
               },

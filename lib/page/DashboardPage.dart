@@ -83,6 +83,27 @@ class _DashboardPage extends State<DashboardPage> {
     }
   }
 
+  void showLoadingModal(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Container(
+            height: 150,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('retry'),
+                SizedBox(height: 20),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -166,20 +187,24 @@ class _DashboardPage extends State<DashboardPage> {
                   child: const Text('Explore discovered devices'),
                   onPressed: () async {
                     try {
-                      final BluetoothDevice? selectedDevice =
-                          await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return ScanPage();
-                          },
-                        ),
-                      );
-
-                      if (selectedDevice != null) {
-                        print(
-                            'Discovery -> selected ' + selectedDevice.address);
+                      if (_bluetoothState == 'STATE_OFF') {
+                        showLoadingModal(context);
                       } else {
-                        print('Discovery -> no device selected');
+                        final BluetoothDevice? selectedDevice =
+                            await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return ScanPage();
+                            },
+                          ),
+                        );
+
+                        if (selectedDevice != null) {
+                          print('Discovery -> selected ' +
+                              selectedDevice.address);
+                        } else {
+                          print('Discovery -> no device selected');
+                        }
                       }
                     } catch (e) {
                       print(e);
