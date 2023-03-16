@@ -12,10 +12,13 @@ class BluetoothDeviceListEntry extends ListTile {
           onTap: onTap,
           onLongPress: onLongPress,
           enabled: enabled,
-          leading:
-              Icon(Icons.devices), // @TODO . !BluetoothClass! class aware icon
-          title: Text(device.name ?? ""),
-          subtitle: Text(device.address.toString()),
+          leading: Icon(Icons.devices),
+          title: Text(device.name ?? "unknown"),
+          subtitle: device.isBonded
+              ? Text('already bonded')
+              : device.isConnected
+                  ? Text('already connected')
+                  : Text(device.address.toString()),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'package:isoja_application/module/Connect/widget/bluetoothdevicelist.dart';
+import 'package:isoja_application/widget/bluetoothdevicelist.dart';
 import 'package:isoja_application/page/selectbonded.dart';
 
 class ScanPage extends StatefulWidget {
@@ -106,13 +106,27 @@ class _ScanPage extends State<ScanPage> {
             rssi: result.rssi,
             onTap: () async {
               try {
-                await FlutterBluetoothSerial.instance.bondDeviceAtAddress(address);
-                Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SelectBondedDevicePage(checkAvailability: false,)),
-                );
+                if (device.isBonded) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => SelectBondedDevicePage(
+                              checkAvailability: false,
+                            )),
+                  );
+                } else {
+                  await FlutterBluetoothSerial.instance
+                      .bondDeviceAtAddress(address);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => SelectBondedDevicePage(
+                              checkAvailability: false,
+                            )),
+                  );
+                }
               } catch (e) {
-                print(e);
+                print('ini eror $e');
               }
             },
             onLongPress: () async {

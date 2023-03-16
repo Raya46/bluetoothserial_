@@ -2,10 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-import 'package:isoja_application/core.dart';
 import 'package:isoja_application/helper/BluetoothManager.dart';
 import 'package:isoja_application/page/ControlPage.dart';
-import 'package:isoja_application/module/Connect/widget/bluetoothdevicelist.dart';
+import 'package:isoja_application/widget/bluetoothdevicelist.dart';
 
 class SelectBondedDevicePage extends StatefulWidget {
   /// If true, on page start there is performed discovery upon the bonded devices.

@@ -262,62 +262,66 @@ class _StoragePageState extends State<StoragePage> {
                         decoration: BoxDecoration(
                             color: disable,
                             borderRadius: BorderRadius.circular(16.0)),
-                        child: DottedBorder(
-                          borderType: BorderType.Rect,
-                          dashPattern: [20, 30],
-                          strokeWidth: 3.0,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  if (pickedFile != null)
-                                    Center(
-                                      child: Text(pickedFile!.name),
-                                    ),
-                                  if (pickedFile == null)
-                                    Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.cloud_download,
-                                          size: width / 2.5,
-                                        ),
-                                        Text('Upload Files Here'),
-                                        Text('File Must Be Formatted to mp3'),
-                                      ],
-                                    ),
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: textColor,
-                                    ),
-                                    onPressed: () async {
-                                      var myRef = firebaseStorage.ref();
+                        child: Column(
+                          children: [
+                            DottedBorder(
+                              borderType: BorderType.Rect,
+                              dashPattern: [20, 30],
+                              strokeWidth: 3.0,
+                              child: Container(
+                                width: width,
+                                height: height / 2.02,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    if (pickedFile != null)
+                                      Column(
+                                        children: [
+                                          Text(pickedFile!.name, overflow: TextOverflow.ellipsis),
+                                        ],
+                                      ),
+                                    if (pickedFile == null)
+                                      Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.cloud_download,
+                                            size: width / 2.5,
+                                          ),
+                                          Text('Upload Files Here'),
+                                          Text('File Must Be Formatted to mp3'),
+                                        ],
+                                      ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: textColor,
+                                      ),
+                                      onPressed: () async {
+                                        var myRef = firebaseStorage.ref();
 
-                                      var myList = await myRef.listAll();
+                                        var myList = await myRef.listAll();
 
-                                      myList.prefixes.forEach((element) async {
-                                        var myFolderList = await firebaseStorage
-                                            .ref(element.name)
-                                            .listAll();
-                                        if (myFolderList.items.length == 3) {
-                                          setState(() {
-                                            displayDelete(context);
-                                          });
-                                        } else {
-                                          selectFile();
-                                        }
-                                      });
-                                    },
-                                    child: const Text("Browse & Upload"),
-                                  ),
-                                ],
+                                        myList.prefixes.forEach((element) async {
+                                          var myFolderList = await firebaseStorage
+                                              .ref(element.name)
+                                              .listAll();
+                                          if (myFolderList.items.length == 3) {
+                                            setState(() {
+                                              displayDelete(context);
+                                            });
+                                          } else {
+                                            selectFile();
+                                          }
+                                        });
+                                      },
+                                      child: const Text("Browse & Upload"),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     )),

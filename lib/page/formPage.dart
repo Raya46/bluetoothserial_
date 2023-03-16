@@ -67,7 +67,7 @@ class _FormPageState extends State<FormPage> {
     ssid = ssid.replaceAll(new RegExp(r'\s'), "");
     pass = pass.replaceAll(new RegExp(r'\s'), "");
     link = link.replaceAll(new RegExp(r'\s'), "");
-    jsonString = '{"S":"$ssid"},{"PW":"$pass"},{"f":"$link"}';
+    jsonString = '{"S":"$ssid"},{"PW":"$pass"},{"F":"$link"}';
   }
 
   void sendWifi() async {
@@ -75,18 +75,10 @@ class _FormPageState extends State<FormPage> {
     pass = passController.text;
     link = linkController.text;
     convertWifi();
-    // targetChar.write(utf8.encode('8'), withoutResponse
-    BluetoothManager.sendData(jsonString);
-    // await Future.delayed(Duration(seconds: 3));
-    // targetChar.write(utf8.encode(jsonString));
-    // BluetoothManager.sendData(jsonString);
+    await BluetoothManager.sendData(jsonString);
     ssidController.clear();
     passController.clear();
     linkController.clear();
-    // Navigator.pushReplacement(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => DashboardPage()),
-    // );
   }
 
   @override
@@ -216,15 +208,6 @@ class _FormPageState extends State<FormPage> {
                   Text(
                     'Enter Your Link/Previous Link',
                     style: TextStyle(color: base),
-                  ),
-                  ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueGrey,
-                  ),
-                  onPressed: () {
-                    // connect();
-                  },
-                  child: const Text("Save"),
                   ),
                 ],
               ),

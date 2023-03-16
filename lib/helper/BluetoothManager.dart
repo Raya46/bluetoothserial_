@@ -10,10 +10,9 @@ class BluetoothManager {
     try {
       connection = await BluetoothConnection.toAddress(device.address)
           .then((_connection) {
-        print('success');
+        print(_connection);
         connection = _connection;
         return connection;
-        
       });
       return true;
     } catch (ex) {
@@ -22,7 +21,7 @@ class BluetoothManager {
     }
   }
 
-  static void sendData(String data) async {
+  static sendData(String data) async {
     if (connection != null) {
       try {
         connection?.output.add(Uint8List.fromList(utf8.encode(data)));

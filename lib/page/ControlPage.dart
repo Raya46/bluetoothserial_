@@ -9,7 +9,7 @@ import 'package:flutter_switch/flutter_switch.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:isoja_application/global/color.dart';
 import 'package:isoja_application/helper/BluetoothManager.dart';
-import 'package:isoja_application/module/Connect/widget/widgetSetting.dart';
+import 'package:isoja_application/widget/widgetSetting.dart';
 
 class _Message {
   int whom;
@@ -29,8 +29,78 @@ class ControlPage extends StatefulWidget {
 }
 
 class _ControlPageState extends State<ControlPage> {
+  bool power = false;
+  bool lamp = false;
+  bool music = false;
+  bool stream = false;
+  bool sliderEnable = false;
+  bool retry = false;
+  bool switch1 = false;
+  bool btnVisible = true;
+  String jsonString = '';
+  String _messageBuffer = '';
+  String value = '';
+  bool notif = false;
+  bool isConnecting = true;
+  bool isDisconnecting = false;
+  bool? get isConnected =>
+      BluetoothManager.connection != null &&
+      BluetoothManager.connection!.isConnected;
+  _Message? message;
+  List<_Message> messages = [];
+  List messags = [];
+  List<Widget> carouselData = [];
+  late int deviceState;
+  TextEditingController valueController = TextEditingController();
+  final CarouselController carouselController = CarouselController();
+
+//!double
+  double sliderValue = 0.0;
+  double counter = 0;
+  double counter2 = 0;
+  String? selectedValue;
+
+  bool selectedMusic = false;
+
+  @override
+  void dispose() {
+    BluetoothManager.disconnect();
+    super.dispose();
+  }
+
+  void initState() {
+    try {
+      super.initState();
+      BluetoothManager.connection!.input!.listen(onDataReceived).onDone(() {
+        if (isDisconnecting) {
+          print('Disconnecting locally!');
+        } else {
+          print('Disconnected remotely!');
+        }
+        if (this.mounted) {
+          setState(() {});
+        }
+      });
+    } catch (e) {
+      Navigator.pop(context);
+    }
+  }
+
+  void changeIconPlay() {
+    if (selectedMusic == false) {
+      BluetoothManager.sendData('/${selectedValue}\n');
+      setState(() {
+        selectedMusic = true;
+      });
+    } else {
+      BluetoothManager.sendData('p\n');
+      setState(() {
+        selectedMusic = false;
+      });
+    }
+  }
+
   void onDataReceived(Uint8List data) {
-    // Allocate buffer for parsed data
     int backspacesCounter = 0;
     data.forEach((byte) {
       if (byte == 8 || byte == 127) {
@@ -84,61 +154,6 @@ class _ControlPageState extends State<ControlPage> {
           ? _messageBuffer.substring(
               0, _messageBuffer.length - backspacesCounter)
           : _messageBuffer + dataString);
-    }
-  }
-
-  bool power = false;
-  bool lamp = false;
-  bool music = false;
-  bool stream = false;
-  bool sliderEnable = false;
-  bool retry = false;
-  bool switch1 = false;
-  bool btnVisible = true;
-  String jsonString = '';
-  String _messageBuffer = '';
-  String value = '';
-  bool notif = false;
-  bool isConnecting = true;
-  bool isDisconnecting = false;
-  bool? get isConnected =>
-      BluetoothManager.connection != null &&
-      BluetoothManager.connection!.isConnected;
-  _Message? message;
-  List<_Message> messages = [];
-  List messags = [];
-  List<Widget> carouselData = [];
-  late int deviceState;
-  TextEditingController valueController = TextEditingController();
-  final CarouselController carouselController = CarouselController();
-
-//!double
-  double sliderValue = 0.0;
-  double counter = 0;
-  double counter2 = 0;
-  String? selectedValue;
-
-  @override
-  void dispose() {
-    BluetoothManager.disconnect();
-    super.dispose();
-  }
-
-  void initState() {
-    super.initState();
-    try {
-      BluetoothManager.connection!.input!.listen(onDataReceived).onDone(() {
-        if (isDisconnecting) {
-          print('Disconnecting locally!');
-        } else {
-          print('Disconnected remotely!');
-        }
-        if (this.mounted) {
-          setState(() {});
-        }
-      });
-    } catch (e) {
-      Navigator.pop(context);
     }
   }
 
@@ -278,31 +293,39 @@ class _ControlPageState extends State<ControlPage> {
                   children: [
                     InkWell(
                         onTap: () {
-                          setState(() {
-                            stream = !stream;
-                            sliderEnable = false;
-                            music = false;
-                          });
-                          openLoading(context);
-                          if (stream == true) {
-                            sendMessageToBluetooth('o\n');
-                          } else if (stream == false) {
-                            BluetoothManager.sendData('8\n');
+                          try {
+                            setState(() {
+                              stream = !stream;
+                              sliderEnable = false;
+                              music = false;
+                            });
+                            openLoading(context);
+                            if (stream == true) {
+                              sendMessageToBluetooth('o\n');
+                            } else if (stream == false) {
+                              BluetoothManager.sendData('f\n');
+                            }
+                          } catch (e) {
+                            print(e);
                           }
                         },
                         child: cardNoise(width)),
                     InkWell(
                         onTap: () {
-                          setState(() {
-                            music = !music;
-                            sliderEnable = false;
-                            stream = false;
-                          });
-                          openLoading(context);
-                          if (music == true) {
-                            sendMessageToBluetooth('l\n');
-                          } else if (music == false) {
-                            BluetoothManager.sendData('5\n');
+                          try {
+                            setState(() {
+                              music = !music;
+                              sliderEnable = false;
+                              stream = false;
+                            });
+                            openLoading(context);
+                            if (music == true) {
+                              sendMessageToBluetooth('l\n');
+                            } else if (music == false) {
+                              BluetoothManager.sendData('5\n');
+                            }
+                          } catch (e) {
+                            print(e);
                           }
                         },
                         child: cardPlayMusic(width)),
@@ -458,24 +481,40 @@ class _ControlPageState extends State<ControlPage> {
                                       child: Icon(Icons.skip_previous,
                                           size: width * 0.15, color: base),
                                       onTap: () {
-                                        BluetoothManager.sendData('p \n');
-                                        carouselController.previousPage(
-                                            duration:
-                                                Duration(milliseconds: 300),
-                                            curve: Curves.linear);
+                                        if (carouselData.isNotEmpty) {
+                                          try {
+                                            BluetoothManager.sendData('k \n');
+                                            carouselController.previousPage(
+                                                duration:
+                                                    Duration(milliseconds: 300),
+                                                curve: Curves.linear);
+                                          } catch (e) {
+                                            print(e);
+                                          }
+                                        } else if (carouselData.isEmpty) {
+                                          print('none');
+                                        }
                                       },
                                     ),
                                     InkWell(
                                       borderRadius: const BorderRadius.all(
                                         Radius.circular(100.0),
                                       ),
-                                      child: Icon(
-                                          Icons.play_circle_fill_rounded,
-                                          size: width * 0.18,
-                                          color: base),
+                                      child: selectedMusic
+                                          ? Icon(Icons.pause_circle,
+                                              size: width * 0.18, color: base)
+                                          : Icon(Icons.play_circle_fill_rounded,
+                                              size: width * 0.18, color: base),
                                       onTap: () {
-                                        BluetoothManager.sendData(
-                                            '/${selectedValue}\n');
+                                        if (carouselData.isNotEmpty) {
+                                          try {
+                                            changeIconPlay();
+                                          } catch (e) {
+                                            print(e);
+                                          }
+                                        } else {
+                                          print('none');
+                                        }
                                       },
                                     ),
                                     InkWell(
@@ -485,11 +524,19 @@ class _ControlPageState extends State<ControlPage> {
                                       child: Icon(Icons.skip_next,
                                           size: width * 0.15, color: base),
                                       onTap: () {
-                                        BluetoothManager.sendData('n \n');
-                                        carouselController.nextPage(
-                                            duration:
-                                                Duration(milliseconds: 300),
-                                            curve: Curves.linear);
+                                        if (carouselData.isNotEmpty) {
+                                          try {
+                                            BluetoothManager.sendData('n \n');
+                                            carouselController.nextPage(
+                                                duration:
+                                                    Duration(milliseconds: 300),
+                                                curve: Curves.linear);
+                                          } catch (e) {
+                                            print(e);
+                                          }
+                                        } else if (carouselData.isEmpty) {
+                                          print('none');
+                                        }
                                       },
                                     ),
                                   ],
@@ -518,10 +565,14 @@ class _ControlPageState extends State<ControlPage> {
             primary: base,
           ),
           onPressed: () {
-            BluetoothManager.sendData('r\n');
-            setState(() {
-              retry = !retry;
-            });
+            try {
+              BluetoothManager.sendData('r\n');
+              setState(() {
+                retry = !retry;
+              });
+            } catch (e) {
+              print(e);
+            }
           },
           child: Container(
             child: Column(
@@ -586,15 +637,19 @@ class _ControlPageState extends State<ControlPage> {
                         height: width * 0.07,
                         value: music,
                         onToggle: (value) {
-                          setState(() {
-                            music = value;
-                            stream = false;
-                          });
-                          openLoading(context);
-                          if (music == true) {
-                            sendMessageToBluetooth('1\n').then((_) {});
-                          } else if (music == false) {
-                            BluetoothManager.sendData('5\n');
+                          try {
+                            setState(() {
+                              music = value;
+                              stream = false;
+                            });
+                            openLoading(context);
+                            if (music == true) {
+                              sendMessageToBluetooth('1\n');
+                            } else if (music == false) {
+                              BluetoothManager.sendData('5\n');
+                            }
+                          } catch (e) {
+                            print(e);
                           }
                         },
                       )
@@ -642,7 +697,11 @@ class _ControlPageState extends State<ControlPage> {
                     children: [
                       InkWell(
                         onTap: () {
-                          stream || music ? incrementCounter() : null;
+                          try {
+                            stream || music ? incrementCounter() : null;
+                          } catch (e) {
+                            print(e);
+                          }
                         },
                         child: Icon(
                           Icons.add_circle,
@@ -652,7 +711,11 @@ class _ControlPageState extends State<ControlPage> {
                       VerticalDivider(),
                       InkWell(
                         onTap: () {
-                          stream || music ? decrementCounter() : null;
+                          try {
+                            stream || music ? decrementCounter() : null;
+                          } catch (e) {
+                            print(e);
+                          }
                         },
                         child: Icon(
                           Icons.remove_circle,
@@ -709,15 +772,19 @@ class _ControlPageState extends State<ControlPage> {
                         height: width * 0.07,
                         value: stream,
                         onToggle: (value) {
-                          setState(() {
-                            stream = value;
-                            music = false;
-                          });
-                          openLoading(context);
-                          if (stream == true) {
-                            sendMessageToBluetooth('o\n');
-                          } else if (stream == false) {
-                            BluetoothManager.sendData('8\n');
+                          try {
+                            setState(() {
+                              stream = value;
+                              music = false;
+                            });
+                            openLoading(context);
+                            if (stream == true) {
+                              sendMessageToBluetooth('o\n');
+                            } else if (stream == false) {
+                              BluetoothManager.sendData('f\n');
+                            }
+                          } catch (e) {
+                            print(e);
                           }
                         },
                       )
@@ -746,14 +813,18 @@ class _ControlPageState extends State<ControlPage> {
           icon: const Icon(Icons.power_settings_new),
           iconSize: (width * 0.1),
           onPressed: () {
-            if (power == true) {
-              BluetoothManager.sendData('off');
-            } else {
-              sendMessageToBluetooth('on');
+            try {
+              if (power == true) {
+                BluetoothManager.sendData('d');
+              } else {
+                sendMessageToBluetooth('c');
+              }
+              setState(() {
+                power = !power;
+              });
+            } catch (e) {
+              print(e);
             }
-            setState(() {
-              power = !power;
-            });
           },
         ),
         IconButton(
